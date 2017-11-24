@@ -1,0 +1,114 @@
+{% extends 'index.html' %}
+{% block title %}水果宅急送-用户中心{% endblock %}
+{% block content %}
+    {% load staticfiles %}
+	<div class="search_bar clearfix">
+		<a href="{% url 'index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;用户中心</div>
+		<div class="search_con fr">
+			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
+			<input type="button" class="input_btn fr" name="" value="搜索">
+		</div>		
+	</div>
+
+	<div class="main_con clearfix">
+		<div class="left_menu_con clearfix">
+			<h3>用户中心</h3>
+			<ul>
+				<li><a href="{% url 'user_info' %}">· 个人信息</a></li>
+				<li><a href="{% url 'order_list' %}">· 全部订单</a></li>
+				<li><a href="{% url 'address' %}" class="active">· 收货地址</a></li>
+			</ul>
+		</div>
+		<div class="right_content clearfix">
+				<h3 class="common_title2">收货地址</h3>
+				<div class="site_con">
+                    {% if no_add %}
+                        <dl>
+                            <dt>{{ no_add }}</dt>
+                        </dl>
+                    {% else %}
+                        <dl>
+                            <dt>当前地址：</dt>
+                            {% for address in add_list %}
+                                {% if address.isactive %}
+                                    <dd>{{ address.address }}&nbsp;&nbsp;{{ address.PostalCode }}&nbsp;&nbsp;({{ address.aname }}收)&nbsp;&nbsp;{{ address.cellphone }}&nbsp;&nbsp;</dd>
+                                {% else %}
+                                {% endif %}
+                            {% endfor %}
+					    </dl>
+                        <dl>
+                            <dt>备选地址:</dt>
+                            {% for address in add_list %}
+                                {% if address.isactive %}
+                                {% else %}
+                                    <dd>{{ address.address }}&nbsp;&nbsp;{{ address.PostalCode }}&nbsp;&nbsp;({{ address.aname }}收)&nbsp;&nbsp;{{ address.cellphone }}&nbsp;&nbsp;<a href="/user/select_address/{{ address.id }}/">选择该地址</a>&nbsp;&nbsp;<a href="/user/delete_address/{{ address.id }}/">删除该地址</a></dd>
+                                {% endif %}
+                            {% endfor %}
+                            <dd>{{ message.mg }}</dd>
+                        </dl>
+                    {% endif %}
+
+				</div>
+				<h3 class="common_title2">编辑地址</h3>
+				<div class="site_con">
+                    {% if edit_address %}
+                        <form action="{% url 'updateaddress' edit_address.id %}" method="post" id="address_add">
+                    {% else %}
+                        <form action="{% url 'address_add' %}" method="post" id="address_add">
+                    {% endif %}
+                        {% csrf_token %}
+                        <input type="hidden" value="{{ edit_address.id }}">
+						<div class="form_group">
+							<label for="addressee">收件人：</label>
+							<input type="text" name="addressee" id="addressee" value="{{ edit_address.aname }}">
+						</div>
+						<div class="form_group form_group2">
+							<label for="Detailed_address">详细地址：</label>
+							<textarea class="site_area" id="Detailed_address" name="Detailed_address" >{{ edit_address.address }}</textarea>
+						</div>
+						<div class="form_group">
+							<label for="address">邮编：</label>
+							<input type="text" name="address" id="address" value="{{ edit_address.PostalCode }}">
+						</div>
+						<div class="form_group">
+							<label for="cellphone">手机：</label>
+							<input type="text" name="cellphone" id="cellphone" value="{{ edit_address.cellphone }}">
+						</div>
+                        {% if edit_address %}
+                            <input type="submit" name="add_sub" value="更新" class="info_submit">
+                        {% else %}
+                            <input type="submit" name="add_sub" value="提交" class="info_submit">
+                        {% endif %}
+					</form>
+				</div>
+		</div>
+	</div>
+{% endblock %}
+{% block script %}
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+    <script src="https://cloud.tinymce.com/stable/tinymce.min.js"></script>
+    <script>
+    //显示数据在哪里除了问题 暂时没有修复
+{#        $('#address_add').submit(function () {#}
+{#            $.ajax({#}
+{#                url:'/user/adradd/',#}
+{#                type:'post',#}
+{#                data:$('#address_add').serialize(),#}
+{#                dataType:'json',#}
+{#                success:function (result) {#}
+{#                    var html = '';#}
+{#                    $.each(result, function (i,item) {#}
+{#                        html += '<dd>'+item.fields.address+'&nbsp;&nbsp;'+item.fields.PostalCode +'&nbsp;&nbsp;'+'('+item.fields.aname+'收)'+'&nbsp;&nbsp;'+'<a href="">'+选择该地址+'</a></dd>'#}
+{#                    });#}
+{#                    //渲染到目标位置的html#}
+{#                    #}
+{#                },#}
+{#                error:function (data) {#}
+{#                    alert('发生了未知错误'+ data)#}
+{#                }#}
+{#            });#}
+{#            return false#}
+{#        });#}
+    </script>
+{% endblock %}

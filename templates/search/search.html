@@ -1,0 +1,87 @@
+{% extends 'index.html' %}
+{% block title%}天天果园-搜索结果{% endblock %}
+{% block content %}
+    {% load staticfiles %}
+	<div class="search_bar clearfix">
+		<a href="/templates/index.html" class="logo fl"><img src="{% static 'images/logo.png' %}"/></a>
+		<div class="search_con fl">
+			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
+			<input type="button" class="input_btn fr" name="" value="搜索">
+		</div>
+		<div class="guest_cart fr">
+			<a href="#" class="cart_name fl">我的购物车</a>
+			<div class="goods_count fl">0</div>
+		</div>
+	</div>
+
+	<div class="navbar_con">
+		<div class="navbar clearfix">
+			<div class="subnav_con fl">
+				<h1>全部商品分类</h1>	
+				<span></span>			
+				<ul class="subnav">
+					<li><a href="/prolist/?page=1&Type=新鲜水果/" class="fruit">新鲜水果</a></li>
+					<li><a href="/prolist/?page=1&Type=海鲜水产/" class="seafood">海鲜水产</a></li>
+					<li><a href="/prolist/?page=1&Type=精品肉类/" class="meet">精品肉类</a></li>
+					<li><a href="/prolist/?page=1&Type=禽类蛋品/" class="egg">禽类蛋品</a></li>
+					<li><a href="/prolist/?page=1&Type=新鲜蔬菜/" class="vegetables">新鲜蔬菜</a></li>
+					<li><a href="/prolist/?page=1&Type=速冻食品/" class="ice">速冻食品</a></li>
+				</ul>
+			</div>
+			<ul class="navlist fl">
+				<li><a href="">首页</a></li>
+				<li class="interval">|</li>
+				<li><a href="">手机生鲜</a></li>
+				<li class="interval">|</li>
+				<li><a href="">抽奖</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="breadcrumb">
+		<a href="#">全部分类</a>
+		<span>></span>
+		<a href="#">新鲜水果</a>
+	</div>
+    <div class="main_wrap clearfix">
+
+    <div class="r_wrap fr clearfix">
+        <h3>搜索结果如下:</h3>
+        <ul class="goods_type_list clearfix">
+        {% if query %}
+            {% for good in page.object_list %}
+                <li>
+                    <a href="/templates/detail.html"><img src="/{{ good.object.picture }}"></a>
+                    <h4><a href="/templates/detail.html">{{ good.object.title }}</a></h4>
+                    <div class="operate">
+                        <span class="prize">{{ good.object.price }}</span>
+                        <span class="unit">16.80/500g</span>
+                        <a href="#" class="add_goods" title="加入购物车"></a>
+                    </div>
+                </li>
+            {% empty %}
+                <h4>没有找到你需要的内容，请继续寻找一下</h4>
+            {% endfor %}
+        {% endif %}
+
+        </ul>
+
+        <div class="pagenation">
+                {% if content.goods_list.has_previous %}
+                    <a href="/prolist/?page={{ content.goods_list.previous_page_number }}">&lt;上一页</a>
+                {% endif %}
+                {% for pg in content.goods_list.paginator.page_range %}
+                    {% if content.goods_list.number == pg %}
+                        <a href="/prolist/?page={{ pg }}" class="active">{{ pg }}</a>
+                    {% else %}
+                        <a href="/prolist/?page={{ pg }}">{{ pg }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if content.goods_list.has_next %}
+                    <a href="/prolist/?page={{ content.goods_list.next_page_number }}">下一页&gt;</a>
+                {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

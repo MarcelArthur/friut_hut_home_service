@@ -1,0 +1,138 @@
+{% extends 'index.html' %}
+{% block title %}水果宅急送-购物车{% endblock %}
+{% block content %}
+    {% load staticfiles %}
+	<div class="search_bar clearfix">
+		<a href="{% url 'index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;购物车</div>
+		<div class="search_con fr">
+			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
+			<input type="button" class="input_btn fr" name="" value="搜索">
+		</div>		
+	</div>
+
+	<div class="total_count">全部商品<em>2</em>件</div>	
+	<ul class="cart_list_th clearfix">
+		<li class="col01">商品名称</li>
+		<li class="col02">商品单位</li>
+		<li class="col03">商品价格</li>
+		<li class="col04">数量</li>
+		<li class="col05">小计</li>
+		<li class="col06">操作</li>
+	</ul>
+    <div id="hearder_next">
+        {% for find_good in find_goods %}
+            <ul class="cart_list_td clearfix">
+                <li class="col01"><input type="checkbox" name="" checked></li>
+                <li class="col02"><img src="/{{ find_good.good.picture }}" alt="{{ find_good.id }}"></li>
+                <li class="col03">{{ find_good.good.title }}<br><em>{{ find_good.good.price }}/500g</em></li>
+                <li class="col04">500g</li>
+                <li class="col05">{{ find_good.good.price }}</li>
+                <li class="col06">
+                    <div class="num_add">
+                        <a href="javascript:;" class="add fl">+</a>
+                        <input type="text" class="num_show fl" value="{{ find_good.ccount }}">
+                        <a href="javascript:;" class="minus fl">-</a><span id="message_full"></span>
+                    </div>
+                </li>
+                <li class="col07">25.80元</li>
+                <li class="col08"><a href="javascript:;">删除</a></li>
+            </ul>
+        {% endfor %}
+    </div>
+
+	<ul class="settlements">
+		<li class="col01"><input type="checkbox" name="" checked=""/></li>
+		<li class="col02">全选</li>
+		<li class="col03">合计(不含运费)：<span>¥</span><em>42.60</em><br>共计<b>2</b>件商品</li>
+		<li class="col04"><a href="javascript:;">去结算</a></li>
+	</ul>
+{% endblock %}
+{% block script %}
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+    <script>
+        $(function () {
+            $('.add').click(function () {
+                var t = $(this).parent().find('input[class*=num_show]');
+                t.val(parseInt(t.val())+1);
+                if(t.val() > 200){
+                    t.val(200);
+                    $('#message_full').text('单次购买的最大数量为200')
+                }
+                $(this).parent().parent().parent().find('li[class*=col07]').text((t.val() * $(this).parent().parent().parent().find('li[class*=col05]').text()).toFixed(2));
+                settotal();
+            });
+            $('.num_show').blur(function () {//脱离焦点后自动更新一次购物车物品信息
+               $.ajax({
+                   url:'/cart/updatecart/'+$(this).parent().parent().parent().find('li[class*=col02] img').attr('alt') +'/',
+                   type:'get',
+                   dataType:'json',
+                   data:{'data': $(this).parent().find('input[class*=num_show]').val()},
+                   success:function (result){
+                        alert('数据更新完成',result);
+                   },
+                   error:function () {
+                       alert('数据更新失败');
+                   }
+               })
+            });
+            $('.minus').click(function () {
+                var t = $(this).parent().find('input[class*=num_show]');
+                t.val(parseInt(t.val())-1);
+                if (t.val() < 0){
+                    t.val(0)
+                }
+                $(this).parent().parent().parent().find('li[class*=col07]').text((t.val() * $(this).parent().parent().parent().find('li[class*=col05]').text()).toFixed(2));
+                settotal();
+            });
+            function settotal() {
+                var s = 0;
+                var count = 0;
+                $('#hearder_next ul').each(function () {
+                    s += $(this).find('input[class*=num_show]').val()* parseInt($(this).find('li[class*=col03] em').text());
+                    count += parseInt($(this).find('input[class*=num_show]').val());
+                    $('.settlements .col03 em').text(s.toFixed(2));
+                    $('.settlements .col03 b').text(count);    //统计商品总数
+
+                });
+            }
+            settotal();
+            //全选
+            $('.settlements li input').click(function () {
+                var state = $(this).prop('checked');
+                $(':checkbox').prop('checked', state);
+
+            });
+            //选一个标签触发效果
+            $(':checkbox:not(.settlements li input)').click(function () {
+                if($(this).prop('checked') && $(':checkbox').length+1 === $(':checkbox')){
+                    $('.settlements li input').prop('checked', true);
+                }else{
+                    $('.settlements li input').prop('checked', false);
+                }
+
+                var t = $(this).parent().parent().parent().find('.col06 .num_add input[class*=num_show]');
+                $(this).parent().find('li[class*=col07]').text((t.val() * $(this).parent().parent().parent().find('li[class*=col05]').text()).toFixed(2));
+            });
+            //提交订单
+            $('.settlements .col04').click(function () {
+                url = '/cart/placeorder/';
+                index = 0;
+                $(':checkbox:not(.settlements li input)').each(function () {
+                    if($(this).prop('checked')){
+                        cart_id = $(this).parent().parent().find('li[class*=col02] img').attr('alt');
+                        if (index === 0){
+                            url += '?cart_id=' + cart_id
+                        }else{
+                            url += '&cart_id=' + cart_id
+                        }
+                        index++
+                    }
+
+                });
+                location.href = url;
+            });
+            settotal();
+        })
+    </script>
+{% endblock %}
