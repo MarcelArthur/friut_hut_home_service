@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import request, response
+from django.http import request, response, HttpRequest
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DataError, DatabaseError
@@ -10,6 +10,37 @@ import math
 from cartinfo.models import CartInfo
 from .models import *
 # Create your views here.
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.views.decorators.cache import cache_page
+from django.utils.cache import get_cache_key
+from django.core.cache import cache
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', 20 * 60)  # 设置一个缓存键失效时间 在缓存到期时自动失效
+
+
+# 视图缓存过期
+def expire_page(path, curreq,args=None, key_prefix=None):
+    if args is None:
+        path = reverse(path)
+    else:
+        path = reverse(path, args=args)
+
+    http_host = curreq.META.get("HTTP_HOST", "")
+    if len(http_host.split(":")) == 1:
+        server_name, server_port = http_host, "80"        # 如果判断没有端口则可能为80端口访问或者443端口HTTPS访问
+    else:
+        server_name, server_port = http_host.split(":")
+
+    request = HttpRequest()
+    request.META = {'SERVER_NAME': server_name, 'SERVER_PORT': server_port}
+    request.META.update(dict((header, value) for (header, value) in
+                             curreq.META.items() if header.startswith('HTTP_')))
+    request.path = path
+    key = get_cache_key(request, key_prefix=key_prefix)
+    if cache.has_key(key):
+        cache.set(key, None, 0)
 
 # 共用分页逻辑
 # 自己实现的分页逻辑(然而并没有什么卵用)
@@ -50,7 +81,9 @@ def page_index(goods, index, Type):
     return good_contact
 
 # 首页的展示逻辑 待优化(ajax)
+@cache_page(15 * 60)
 def index(request):
+    cart_count = 0
     try:
         good_fruit_type = get_object_or_404(GoodsType, title='新鲜水果')
         fruit_goods = random.sample(list(good_fruit_type.goods_set.all()), 4)
@@ -64,10 +97,13 @@ def index(request):
         quick_food = random.sample(list(quick_snacks_good.goods_set.all()), 4)
         egg_goods_type = get_object_or_404(GoodsType, title='禽类蛋品')
         eggs_foods = random.sample(list(egg_goods_type.goods_set.all()), 4)
-        # content = {'fruit_goods': fruit_goods, 'meet_goods': meet_goods, 'water_goods': water_goods, 'vegetables_good': vegetables_good, 'quick_food':quick_food, 'eggs_foods':eggs_foods}
+        if request.session.get('user_id', None):
+            user_id = request.session.get('user_id', None)
+            cart_ = CartInfo.objects.filter(user=user_id)
+            cart_count = len(cart_)
     except DatabaseError as e:
         logging.warning(e)
-    return render(request, 'index.html', {'good_list': locals()})
+    return render(request, 'index.html', {'good_list': locals(), 'cart_count':cart_count})
 
 
 # 商品列表页的展示逻辑(代码的复用性)

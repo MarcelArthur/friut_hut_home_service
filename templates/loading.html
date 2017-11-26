@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" http-equiv="refresh" content="3;url={% url 'login' %}">
+    <title>哇,注册成功</title>
+</head>
+{% load staticfiles %}
+<body>
+    <h1>注册成功 <span>几秒后将会跳转</span></h1>
+    <h3><a href="{% url 'login' %}">如果没有跳转请点击这里跳转</a></h3>
+</body>
+</html>

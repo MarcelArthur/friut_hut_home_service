@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import request, response, HttpResponse
 from django.contrib import messages
+from django.contrib.auth.models import User, Permission
 from django.db import DatabaseError
 import logging
 from django.core import serializers
@@ -10,9 +11,18 @@ from .models import *
 from memberapp.models import Goods
 # Create your views here.
 from hashlib import sha1
-
+from memberapp.views import expire_page
 # get请求
 auth_check = 'MarcelArhut'
+
+
+# 重定向非法的注册和登录请求
+def rendirct_decorator(func):
+    def rendirct_login_regsiter(request, *args, **kwargs):
+        if request.session.get('user_id'):
+            return redirect('/')
+        return func(request, *args, **kwargs)
+    return rendirct_login_regsiter
 
 
 # 装饰器(面向切面， 对于某些页面进行装饰， 要求进行权限认证, 并且记录跳转前的位置值)
@@ -34,16 +44,19 @@ def login_decorator(func):
 
 
 # 重定向到登录页
+@rendirct_decorator
 def signin(request):
     return render(request, 'login.html')
 
 
 # 重定向到注册页面
+@rendirct_decorator
 def register_in(request):
     return render(request, 'register.html')
 
 
 # 处理post请求页面，如果完成重新跳转到对应的页面
+
 def login_(request):
     if request.method == 'POST':
         user = UserInfo()
@@ -60,6 +73,7 @@ def login_(request):
             logging.warning(e)
         request.session['user_id'] = find_user[0].id
         request.session['user_name'] = user.uname
+        request.session.set_expiry(30 * 60)
         if request.COOKIES.get('url'):
             url = request.COOKIES.get('url')
             res = redirect(url)
@@ -69,6 +83,7 @@ def login_(request):
         # if request.COOKIES.get('cart'):
         #       request.session['cart'] = request.COOKIES.get('cart')
         #       del request.COOKIES['cart']
+        expire_page('index', request)
         return redirect('/')
     return redirect('/user/login/')
 
@@ -81,7 +96,7 @@ def register_(request):
             a = UserInfo.objects.get(uname=new_user.uname)
             if a:
                 return render(request, 'register.html', {'messageuname': '该用户名已经存在'})
-        except ObjectDoesNotExist as e:
+        except BaseException as e:
             logging.warning(e)
         if request.POST.get('pwd') != request.POST.get('cpwd'):
             return render(request, 'register.html', {'message_': '两次输入的密码不一致'})
@@ -92,7 +107,7 @@ def register_(request):
             new_user.save()
         except DatabaseError as e:
             logging.warning(e)
-        return render(request, 'index.html')
+        return render(request, 'loading.html')
     return redirect('/user/register/')
 
 
@@ -102,6 +117,7 @@ def login_out(request):
         if request.session['user_name']:
             del request.session['user_id']
             del request.session['user_name']
+        expire_page('index', request)
     except KeyError as e:
         logging.warning(e)
     return redirect('/')

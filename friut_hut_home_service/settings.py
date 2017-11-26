@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -25,7 +24,7 @@ SECRET_KEY = 'qtajf2wwmb^vy$wumz8k41_+ex+u0n(fszl)t4drh$w8l%$+fm'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['119.27.165.234', '127.0.0.1']
 
 
 # Application definition
@@ -37,6 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'debug_toolbar',
+    'pympler',
     'haystack',
     'memberapp',
     'userinfo',
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'friutday.urls'
@@ -91,6 +93,37 @@ DATABASES = {
         # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+CACHES = {
+    'default':{
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION':'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_TIMEOUT': 10,
+        }
+    }
+}
+
+DEBUG_TOOLBAR_PATCH_SETTINGS = False
+
+INTERNAL_IPS = ('127.0.0.1', )
+
+DEBUG_TOOLBAR_PANELS = [
+ 'debug_toolbar.panels.versions.VersionsPanel',
+ 'debug_toolbar.panels.timer.TimerPanel',
+ 'debug_toolbar.panels.settings.SettingsPanel',
+ 'debug_toolbar.panels.headers.HeadersPanel',
+ 'debug_toolbar.panels.request.RequestPanel',
+ 'debug_toolbar.panels.sql.SQLPanel',
+ 'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+ 'debug_toolbar.panels.templates.TemplatesPanel',
+ 'debug_toolbar.panels.cache.CachePanel',
+ 'debug_toolbar.panels.signals.SignalsPanel',
+ 'debug_toolbar.panels.logging.LoggingPanel',
+ 'debug_toolbar.panels.redirects.RedirectsPanel',
+ 'pympler.panels.MemoryPanel',
+    ]
 
 
 # Password validation
@@ -153,6 +186,12 @@ STATICFILES_DIRS = [
 
 # session timout
 SESSION_COOKIE_AGE = 60*30
+
+# session_engine
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+
+# session_cahce_settings
+SESSION_CACHE_ALIAS = "default"
 
 # close
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

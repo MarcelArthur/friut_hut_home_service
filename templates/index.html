@@ -2,6 +2,7 @@
 <html>
 <head>
     {% load staticfiles %}
+    {% load cache %}
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 	<title>{% block title %}优选生鲜-首页{% endblock %}</title>
 	<link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
@@ -48,7 +49,7 @@
 		</div>
 		<div class="guest_cart fr">
 			<a href="{% url 'cart' %}" class="cart_name fl">我的购物车</a>
-			<div class="goods_count fl" id="show_count">0</div>
+			<div class="goods_count fl" id="show_count">{{ cart_count }}</div>
 		</div>
 	</div>
 

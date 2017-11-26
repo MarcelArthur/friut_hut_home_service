@@ -47,8 +47,8 @@
 				<ul>
                     {% for good_h in content.hot_goods %}
                         <li>
-                            <a href="#"><img src="/{{ good_h.picture }}"></a>
-                            <h4><a href="#">{{ good_h.title }}</a></h4>
+                            <a href="{{ good_h.get_absolute_url }}"><img src="/{{ good_h.picture }}"></a>
+                            <h4><a href="{{ good_h.get_absolute_url }}">{{ good_h.title }}</a></h4>
                             <div class="prize">{{ good_h.price }}</div>
 					    </li>
                     {% endfor %}
@@ -66,12 +66,18 @@
 			<ul class="goods_type_list clearfix">
                 {% for good in content.goods_list %}
                     <li>
-                        <a href="detail.html"><img src="/{{ good.picture }}"></a>
-                        <h4><a href="detail.html">{{ good.title }}</a></h4>
+                        <a href="{{ good.get_absolute_url }}"><img src="/{{ good.picture }}"></a>
+                        <h4><a href="{{ good.get_absolute_url }}">{{ good.title }}</a></h4>
                         <div class="operate">
                             <span class="prize">{{ good.price }}</span>
                             <span class="unit">16.80/500g</span>
-                            <a href="#" class="add_goods" title="加入购物车"></a>
+                            <input type="hidden" class='re_good_id' value="{{ good.id }}">
+                            {% if request.session.user_name %}
+                                <a href="javascript:addgoods();" class="add_goods" title="加入购物车"></a>
+                            {% else %}
+                                <a href="{% url 'login' %};" class="add_goods" title="加入购物车"></a>
+                            {% endif %}
+
                         </div>
                     </li>
                 {% endfor %}
@@ -98,6 +104,24 @@
 {% block script %}
     <script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
     <script>
+       // 没有特别好jq方案
+       function addgoods(){
+            console.log($(this).parent());
+            alert($(this).parent().find('input[class*=re_good_id]').val());
+            $.ajax({
+                url: '/cart/addcart/',
+                type: 'post',
+                data:{'good_id': $(this).find('input[class*=re_good_id]').val(), 'gcount': '1', csrfmiddlewaretoken: '{{ csrf_token }}'},
+                datatype: 'json',
+                success:function (result) {
+                    alert(result.text);
+                    $('#goods_count').html(result.cart_count);
 
+                },
+                error:function (error) {
+                    alert('添加失败, 请检查网络并重新添加');
+                }
+            });
+        }
     </script>
 {% endblock %}

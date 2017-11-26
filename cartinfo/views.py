@@ -6,6 +6,7 @@ from cartinfo.models import CartInfo
 import logging
 import json
 from memberapp.models import Goods
+from django.core import serializers
 from userinfo.models import UserInfo, Address
 # Create your views here.
 
@@ -28,13 +29,14 @@ def add_cart(request):
     '''
     new_cart = CartInfo()
     user_id = request.session.get('user_id')
-    good_id = request.GET.get('good_id')
+    good_id = request.POST.get('good_id')
+    print('商品id', good_id)
     cart_count_good = CartInfo.objects.filter(user=user_id, good=good_id)
     cart_add_count = 0
     # 判断购物车当中是否已添加物品的逻辑
     for i in cart_count_good:
         cart_add_count += 1
-    good_count = request.GET.get('gcount')[-2]
+    good_count = request.POST.get('gcount')
     good_ = Goods.objects.filter(id=good_id)
     user_ = UserInfo.objects.get(id=user_id)
     new_cart.ccount = good_count
@@ -42,7 +44,7 @@ def add_cart(request):
         new_cart.user = user_
         new_cart.good = good_[0]
     else:
-        raise '添加购物车失败'
+        print('添加购物车失败')
         redirect('/cart/')
     try:
         if cart_add_count > 0:
@@ -89,5 +91,21 @@ def create_place_order(request):
         return render(request, 'place_order.html', {'carts': carts, 'addresses': addresses[0], 'abs_ins': abs_ins})
     else:
         return redirect('/cart/')
+
+
+def delete_cart(request):
+    cart_id = request.POST.get('cart_id')
+    user_id = request.session.get('user_id')
+    carts = CartInfo.objects.filter(id=cart_id)
+    if len(carts) > 0:
+        carts.delete()
+        status = 'success'
+    else:
+        status = 'fail'
+    carts_list = CartInfo.objects.filter(user=user_id)
+
+    return HttpResponse(json.dumps({'status': status, 'url_d': '/cart/'}), content_type='application/json')
+
+
 
 

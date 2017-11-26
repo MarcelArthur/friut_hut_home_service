@@ -52,6 +52,29 @@
     <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
     <script>
         $(function () {
+            var vc = $(':checkbox').length - 1;
+            $('.total_count em').html(vc);
+
+            total_data();
+            function total_data() {
+                var s = 0;
+                var count = 0;
+                //说明一下这里是记录被选中的商品总价和相关的小计
+                $(':checkbox:not(.settlements li input)').each(function () {
+                    if($(this).prop('checked')){
+                        var tmp = $(this).parent().parent().find('input[class*=num_show]').val();
+                        s += tmp  * parseInt($(this).parent().parent().find('li[class*=col03] em').text());
+                        count += parseInt(tmp);
+                    }
+
+                // 更新商品小计栏
+                    $(this).parent().parent().find('li[class*=col07]').text((tmp * $(this).parent().parent().find('li[class*=col05]').text()).toFixed(2));
+                });
+                $('.settlements .col03 em').text(s.toFixed(2));
+                $('.settlements .col03 b').text(count);    //统计商品总数
+            }
+
+
             $('.add').click(function () {
                 var t = $(this).parent().find('input[class*=num_show]');
                 t.val(parseInt(t.val())+1);
@@ -76,6 +99,20 @@
                    }
                })
             });
+            $('.col08').click(function () {
+               $.ajax({
+                   url:'{% url 'de_cart' %}',
+                   type:'post',
+                   dataType: 'json',
+                   data: {'cart_id': $(this).parent().find('li[class*=col02] img').attr('alt'), csrfmiddlewaretoken: '{{ csrf_token }}'},
+                   success:function (result) {
+                       location.href = result.url_d;
+                   },
+                   error:function () {
+                       alert('网络环境异常');
+                   }
+               })
+            });
             $('.minus').click(function () {
                 var t = $(this).parent().find('input[class*=num_show]');
                 t.val(parseInt(t.val())-1);
@@ -89,8 +126,9 @@
                 var s = 0;
                 var count = 0;
                 $('#hearder_next ul').each(function () {
-                    s += $(this).find('input[class*=num_show]').val()* parseInt($(this).find('li[class*=col03] em').text());
-                    count += parseInt($(this).find('input[class*=num_show]').val());
+                    var tmp = $(this).find('input[class*=num_show]').val();
+                    s += tmp * parseInt($(this).find('li[class*=col03] em').text());
+                    count += parseInt(tmp);
                     $('.settlements .col03 em').text(s.toFixed(2));
                     $('.settlements .col03 b').text(count);    //统计商品总数
 
@@ -99,22 +137,36 @@
             settotal();
             //全选
             $('.settlements li input').click(function () {
+                var s = 0;
+                var count = 0;
                 var state = $(this).prop('checked');
                 $(':checkbox').prop('checked', state);
+                if(state === false){
+                    $('.settlements .col03 em').text(s.toFixed(2));
+                    $('.settlements .col03 b').text(count);
+                } else{
+                    total_data();
+                }
 
             });
             //选一个标签触发效果
             $(':checkbox:not(.settlements li input)').click(function () {
-                if($(this).prop('checked') && $(':checkbox').length+1 === $(':checkbox')){
+
+
+                if($(this).prop('checked') && $(':checkbox:not(.settlements li input)').prop('checked', true).length + 1 === $(':checkbox').length){
                     $('.settlements li input').prop('checked', true);
                 }else{
                     $('.settlements li input').prop('checked', false);
                 }
 
+
                 var t = $(this).parent().parent().parent().find('.col06 .num_add input[class*=num_show]');
                 $(this).parent().find('li[class*=col07]').text((t.val() * $(this).parent().parent().parent().find('li[class*=col05]').text()).toFixed(2));
+
+                total_data();
+                // total_data(); 这段JS不能打印响应的变化 待修复
             });
-            //提交订单
+            //提交订单 此处应为post提交方式
             $('.settlements .col04').click(function () {
                 url = '/cart/placeorder/';
                 index = 0;

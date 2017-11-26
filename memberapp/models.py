@@ -36,5 +36,6 @@ class Goods(models.Model):
 
     class Meta():
         db_table = 'goods'
+        ordering = ['id']   # 默认按照id方式排序 否则会有无序列表警告
 
 

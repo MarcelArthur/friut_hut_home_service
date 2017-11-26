@@ -3,7 +3,7 @@
 {% block title %}水果宅急送-商品详情{% endblock %}
 {% block content %}
 	<div class="search_bar clearfix">
-		<a href="index.html" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
+		<a href="{% url 'index' %}" class="logo fl"><img src="{% static 'images/logo.png' %}"></a>
 		<div class="search_con fl">
 			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
 			<input type="button" class="input_btn fr" name="" value="搜索">
@@ -154,8 +154,9 @@
 					});
 			});
 			$.ajax({
-                url: '/cart/addcart/?good_id='+ '{{ goodone.id }}'+ '&gcount='+ $('.num_show').val() + '/',
-                type: 'get',
+                url: '/cart/addcart/',
+                type: 'post',
+                data:{'good_id': '{{ goodone.id }}', 'gcount':$('.num_show').val(), csrfmiddlewaretoken: '{{ csrf_token }}'},
                 datatype: 'json',
                 success:function (result) {
                     alert(result.text);
@@ -163,7 +164,7 @@
 
                 },
                 error:function (error) {
-                    alert('添加失败, 请检查网络并重新添加. 失败原因见' + error)
+                    alert('添加失败, 请检查网络并重新添加');
                 }
             })
 		})
